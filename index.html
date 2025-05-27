@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Task Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for background and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('https://source.unsplash.com/random/1920x1080/?nature,mountain,forest,lake');
+            /* Visually motivating nature background */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            /* Ensures background stays fixed during scroll */
+            min-height: 100vh;
+            /* Ensure body takes full viewport height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            /* Padding around the main content for smaller screens */
+        }
+
+        /* Main container styling for better readability and visual appeal */
+        .task-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            /* Slightly transparent white background */
+            backdrop-filter: blur(5px);
+            /* Optional: Adds a blur effect to the background behind the container */
+            border-radius: 1rem;
+            /* Rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            /* Large shadow for depth */
+            padding: 2rem;
+            /* Ample padding inside the container */
+            width: 100%;
+            max-width: 1200px;
+            /* Max width for desktop screens */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            /* Spacing between sections */
+        }
+
+        /* Styling for task list items */
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background-color: #f9fafb;
+            /* Light background for each task */
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            /* Smooth transition for hover effects */
+        }
+
+        .task-item.done {
+            text-decoration: line-through;
+            color: #6b7280;
+            /* Gray out completed tasks */
+            background-color: #eff6ff;
+            /* Lighter background for done tasks */
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            /* Slight lift on hover */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input and button styling */
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-group input[type="text"] {
+            flex-grow: 1;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .input-group button {
+            background-color: #4f46e5;
+            /* Primary button color */
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .input-group button:hover {
+            background-color: #4338ca;
+            /* Darker on hover */
+        }
+
+        /* Icon button styling */
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .icon-button:hover {
+            background-color: #e5e7eb;
+            /* Light gray background on hover */
+        }
+
+        /* SVG icon sizing */
+        .icon-button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #6b7280;
+            /* Default icon color */
+        }
+
+        .icon-button.delete-button svg {
+            color: #ef4444;
+            /* Red for delete icon */
+        }
+
+        .icon-button.delete-button:hover svg {
+            color: #dc2626;
+            /* Darker red on hover */
+        }
+
+        .icon-button.toggle-button svg {
+            color: #10b981;
+            /* Green for checkmark icon */
+        }
+
+        .icon-button.toggle-button:hover svg {
+            color: #059669;
+            /* Darker green on hover */
+        }
+
+        /* Styling for saved date items */
+        .saved-date-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            /* No margin-bottom as gap handles spacing */
+        }
+
+        .saved-date-item .date-button {
+            flex-grow: 1;
+            /* Allow date button to take available space */
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            /* text-sm */
+            line-height: 1.25rem;
+            /* leading-tight */
+            font-weight: 500;
+            /* font-medium */
+            text-align: center;
+            border-radius: 0.5rem;
+            /* rounded-lg */
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+            transition-duration: 200ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            /* ease-in-out */
+        }
+
+
+        /* Responsive grid for task sections */
+        @media (min-width: 768px) {
+            .task-sections-grid {
+                grid-template-columns: repeat(3, 1fr);
+                /* 3 columns on medium screens and up */
+                /* Remove any fixed height or min-height from the grid itself */
+                align-items: start;
+                /* Align items to the top, so they don't stretch vertically */
+            }
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Dark semi-transparent background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            /* Ensure it's on top of other content */
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            /* rounded-lg */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* shadow-xl */
+            padding: 1.5rem;
+            /* p-6 */
+            width: 90%;
+            max-width: 600px;
+            /* Max width for the modal */
+            max-height: 80vh;
+            /* Max height to enable scrolling */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            /* Enable vertical scrolling for content */
+            flex-grow: 1;
+            /* Allows it to take available space */
+            padding-right: 0.5rem;
+            /* Add some padding for scrollbar */
+        }
+
+        /* Optional: Scrollbar styling for webkit browsers */
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Progress Bar Styles */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            /* Light gray background */
+            border-radius: 9999px;
+            /* Full rounded corners */
+            height: 1.5rem;
+            /* h-6 for better visibility */
+            overflow: hidden;
+            /* Ensure inner bar stays within bounds */
+            margin-bottom: 1rem;
+            /* mb-4 */
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4f46e5;
+            /* Default primary blue color */
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+            /* Smooth transition for width change */
+        }
+
+        .progress-bar-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            /* Take full height of container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            /* Default text color */
+            font-size: 0.875rem;
+            /* text-sm */
+            font-weight: bold;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            /* Allows clicks to pass through to the fill if needed */
+        }
+
+        /* Custom colors for different progress bars */
+        #study-progress-fill {
+            background-color: #3b82f6;
+            /* Blue for study */
+        }
+
+        #skill-progress-fill {
+            background-color: #22c55e;
+            /* Green for skill */
+        }
+
+        #necessary-progress-fill {
+            background-color: #a855f7;
+            /* Purple for necessary work */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="task-container">
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Daily Task Tracker</h1>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+                <label for="date-picker" class="text-lg font-medium text-gray-700">Select Date:</label>
+                <input type="date" id="date-picker" value=""
+                    class="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-lg">
+                <button id="open-reading-funnel-btn"
+                    class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ease-in-out">
+                    Reading Funnel
+                </button>
+            </div>
+        </header>
+
+        <section class="mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-3">Saved Entries</h2>
+            <div id="saved-dates-container" class="flex flex-wrap gap-2 justify-center">
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 task-sections-grid">
+            <section class="bg-blue-50 p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-book-open-text">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        <path d="M10 12H8" />
+                        <path d="M16 12h2" />
+                        <path d="M16 18h2" />
+                        <path d="M16 15h2" />
+                        <path d="M10 18H8" />
+                        <path d="M10 15H8" />
+                    </svg>
+                    Study List
+                </h2>
+                <div class="progress-bar-container">
+                    <div id="study-progress-fill" class="progress-bar-fill"></div>
+                    <div id="study-progress-text" class="progress-bar-text">0%</div>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="text" id="study-input" placeholder="Add a new study task..." class="w-full">
+                    <button onclick="addTask('study')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-plus">
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="study-list" class="space-y-2">
+                </ul>
+            </section>
+
+
+            <section class="bg-green-50 p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-lightbulb">
+                        <path
+                            d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 6c0 1.3.5 2.6 1.5 3.5.8.7 1.3 1.5 1.5 2.5" />
+                        <path d="M9 18h6" />
+                        <path d="M10 22h4" />
+                        <path d="M11 18v4" />
+                        <path d="M7 18h2" />
+                    </svg>
+                    Skill Development
+                </h2>
+                <div class="progress-bar-container">
+                    <div id="skill-progress-fill" class="progress-bar-fill"></div>
+                    <div id="skill-progress-text" class="progress-bar-text">0%</div>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="text" id="skill-input" placeholder="Add a new skill task..." class="w-full">
+                    <button onclick="addTask('skill')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-plus">
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="skill-list" class="space-y-2">
+                </ul>
+            </section>
+
+            <section class="bg-purple-50 p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-clipboard-list">
+                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <path d="M12 11h4" />
+                        <path d="M12 16h4" />
+                        <path d="M8 11h.01" />
+                        <path d="M8 16h.01" />
+                    </svg>
+                    Necessary Work
+                </h2>
+                <div class="progress-bar-container">
+                    <div id="necessary-progress-fill" class="progress-bar-fill"></div>
+                    <div id="necessary-progress-text" class="progress-bar-text">0%</div>
+                </div>
+                <div class="input-group mb-4">
+                    <input type="text" id="necessary-input" placeholder="Add a new necessary task..." class="w-full">
+                    <button onclick="addTask('necessary')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-plus">
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="necessary-list" class="space-y-2">
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <div id="reading-funnel-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Reading Funnel</h3>
+                <button id="close-reading-funnel-btn"
+                    class="text-gray-500 hover:text-gray-800 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-x">
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="reading-funnel-content" class="modal-body text-gray-700 leading-relaxed">
+                <p><strong class="font-bold">Physics, Chemistry, Biology:</strong> Board book, Netter, Quick
+                    Preparation, Supplement (Except Biology), FT Sugg Book, QNA</p>
+                <p><strong class="font-bold">English 1st Paper:</strong> Board book, Netter</p>
+                <p><strong class="font-bold">English 2nd Paper:</strong> Advanced Learners, Quick Preparation, Netter
+                </p>
+                <p><strong class="font-bold">General Math, Higher Math:</strong> Board book with math solving from guide
+                    (especially Secret of CQ), Netter, Quick Prep, FT Sugg Book, QNA</p>
+                <p><strong class="font-bold">Bangla 1st Paper, Bangla 2nd Paper, BGS, ICT:</strong> Board book, Netter,
+                    Quick Prep, Made Easy MCQ, FT Sugg Book, QNA</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get, child, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmnvSOKU3Wxlt6Ae-gs4hS3iEbdY6EGF8",
+            authDomain: "todo-task-affc1.firebaseapp.com",
+            projectId: "todo-task-affc1",
+            storageBucket: "todo-task-affc1.appspot.com",
+            messagingSenderId: "682571344448",
+            appId: "1:682571344448:web:a68d7839295455279b8da5",
+            measurementId: "G-TKM76ZM3J2",
+            databaseURL: "https://todo-task-affc1-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Expose db globally for other script blocks
+        window.db = db;
+        window.ref = ref;
+        window.set = set;
+        window.get = get;
+        window.child = child;
+        window.onValue = onValue;
+        window.remove = remove;
+        window.update = update;
+    </script>
+
+
+    <script>
+        // Global variables to manage tasks and current date
+        let currentDate; // Stores the currently selected date (YYYY-MM-DD)
+        let tasksData = {}; // Stores all tasks, keyed by date: { 'YYYY-MM-DD': { study: [], skill: [], necessary: [] } }
+
+        // DOM element references
+        const datePicker = document.getElementById('date-picker');
+        const savedDatesContainer = document.getElementById('saved-dates-container');
+        
+        // Task list elements for each section
+        const taskLists = {
+            study: document.getElementById('study-list'),
+            skill: document.getElementById('skill-list'),
+            necessary: document.getElementById('necessary-list') // Updated ID
+        };
+
+        // Task input elements for each section
+        const taskInputs = {
+            study: document.getElementById('study-input'),
+            skill: document.getElementById('skill-input'),
+            necessary: document.getElementById('necessary-input') // Updated ID
+        };
+
+        // Progress bar elements
+        const progressBars = {
+            study: {
+                fill: document.getElementById('study-progress-fill'),
+                text: document.getElementById('study-progress-text')
+            },
+            skill: {
+                fill: document.getElementById('skill-progress-fill'),
+                text: document.getElementById('skill-progress-text')
+            },
+            necessary: { // Updated ID
+                fill: document.getElementById('necessary-progress-fill'), // Updated ID
+                text: document.getElementById('necessary-progress-text') // Updated ID
+            }
+        };
+
+
+        // Modal elements
+        const openReadingFunnelBtn = document.getElementById('open-reading-funnel-btn');
+        const readingFunnelModal = document.getElementById('reading-funnel-modal');
+        const closeReadingFunnelBtn = document.getElementById('close-reading-funnel-btn');
+        const readingFunnelContent = document.getElementById('reading-funnel-content'); // To populate content later
+
+        /**
+         * Initializes the application on page load.
+         * Sets the date picker to the current date, loads tasks, and renders saved dates.
+         */
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!currentDate) {
+                const today = new Date();
+                currentDate = formatDate(today);
+                datePicker.value = currentDate;
+            }
+
+            loadTasksForDate(currentDate);
+
+            datePicker.addEventListener('change', (event) => {
+                const newDate = event.target.value;
+                console.log("Selected date:", newDate); // Debugging
+                if (newDate) {
+                    loadTasksForDate(newDate);
+                }
+            });
+
+            // LocalStorage data migration
+            const storedTasks = localStorage.getItem('dailyTaskTracker');
+            if (storedTasks) {
+                tasksData = JSON.parse(storedTasks);
+                for (const date in tasksData) {
+                    if (tasksData[date].self && !tasksData[date].necessary) {
+                        tasksData[date].necessary = tasksData[date].self;
+                        delete tasksData[date].self;
+                    } else if (!tasksData[date].self && !tasksData[date].necessary) {
+                        tasksData[date].necessary = [];
+                    }
+                }
+                saveTasks();
+            }
+
+            renderSavedDates();
+
+            openReadingFunnelBtn.addEventListener('click', openModal);
+            closeReadingFunnelBtn.addEventListener('click', closeModal);
+            readingFunnelModal.addEventListener('click', (event) => {
+                if (event.target === readingFunnelModal) {
+                    closeModal();
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !readingFunnelModal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+
+
+        /**
+         * Formats a Date object into a YYYY-MM-DD string.
+         * This format is required for HTML input type="date".
+         * @param {Date} date - The Date object to format.
+         * @returns {string} The formatted date string.
+         */
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /**
+         * Formats a YYYY-MM-DD date string into a DD-MM-YYYY string for display.
+         * This is for displaying dates in the "Saved Entries" section in Bangladesh format.
+         * @param {string} dateString - The date string in YYYY-MM-DD format.
+         * @returns {string} The formatted date string in DD-MM-YYYY format.
+         */
+        function formatDateForDisplay(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}-${month}-${year}`;
+        }
+
+        /**
+         * Loads tasks for a specific date and updates the UI.
+         * If no tasks exist for the date, initializes an empty structure.
+         * @param {string} date - The date string (YYYY-MM-DD) to load tasks for.
+         */
+        function loadTasksForDate(date) {
+            currentDate = date;
+            datePicker.value = currentDate;
+
+            const dbRef = ref(db, `tasks/${date}`);
+            get(dbRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    tasksData[date] = snapshot.val();
+                } else {
+                    // If no data exists for this date, initialize with empty sections
+                    tasksData[date] = {
+                        study: [],
+                        skill: [],
+                        necessary: []
+                    };
+                }
+                renderTasks('study');
+                renderTasks('skill');
+                renderTasks('necessary');
+                updateProgressBar('study');
+                updateProgressBar('skill');
+                updateProgressBar('necessary');
+                renderSavedDates();
+            }).catch((error) => {
+                console.error("Error loading tasks:", error);
+            });
+        }
+
+
+        /**
+         * Saves the current tasksData object to localStorage.
+         * Also re-renders the saved dates section to reflect any changes.
+         */
+        function saveTasks() {
+            const dbRef = ref(db, `tasks/${currentDate}`);
+            set(dbRef, tasksData[currentDate])
+                .then(() => {
+                    console.log("Tasks saved to Firebase!");
+                    renderSavedDates(); // Update UI
+                })
+                .catch((error) => {
+                    console.error("Error saving tasks:", error);
+                });
+        }
+
+
+        /**
+         * Adds a new task to the specified section for the current date.
+         * @param {string} sectionType - The type of section ('study', 'skill', 'necessary').
+         */
+        function addTask(sectionType) {
+            const inputElement = taskInputs[sectionType];
+            const taskText = inputElement.value.trim();
+
+            if (taskText) {
+                // Ensure the date entry exists
+                if (!tasksData[currentDate]) {
+                    tasksData[currentDate] = { study: [], skill: [], necessary: [] }; // Initialise with new key
+                }
+                // Ensure the section array exists
+                if (!tasksData[currentDate][sectionType]) {
+                    tasksData[currentDate][sectionType] = [];
+                }
+
+                tasksData[currentDate][sectionType].push({ text: taskText, done: false });
+                inputElement.value = ''; // Clear the input field
+                saveTasks(); // Save changes to localStorage
+                renderTasks(sectionType); // Re-render tasks for the specific section
+                updateProgressBar(sectionType); // Update progress bar
+            }
+        }
+
+        /**
+         * Toggles the 'done' status of a task.
+         * @param {string} sectionType - The type of section.
+         * @param {number} index - The index of the task in the array.
+         */
+        function toggleTaskDone(sectionType, index) {
+            if (tasksData[currentDate] && tasksData[currentDate][sectionType] && tasksData[currentDate][sectionType][index]) {
+                tasksData[currentDate][sectionType][index].done = !tasksData[currentDate][sectionType][index].done;
+                saveTasks();
+                renderTasks(sectionType);
+                updateProgressBar(sectionType); // Update progress bar
+            }
+        }
+
+        /**
+         * Deletes a task from the specified section with triple confirmation.
+         * @param {string} sectionType - The type of section.
+         * @param {number} index - The index of the task to delete.
+         */
+        function deleteTask(sectionType, index) {
+            // First confirmation
+            if (confirm('Are you absolutely sure you want to delete this task?')) {
+                // Second confirmation
+                if (confirm('This action cannot be undone. Confirm deletion again?')) {
+                    // Third and final confirmation
+                    if (confirm('Last chance! Are you REALLY sure you want to delete this?')) {
+                        // Perform deletion
+                        if (tasksData[currentDate] && tasksData[currentDate][sectionType] && tasksData[currentDate][sectionType][index]) {
+                            tasksData[currentDate][sectionType].splice(index, 1);
+                            saveTasks();
+                            renderTasks(sectionType);
+                            updateProgressBar(sectionType); // Update progress bar
+                            alert('Task deleted successfully.'); // Success message
+                        }
+                    } else {
+                        alert('Deletion cancelled.'); // User cancelled on third prompt
+                    }
+                } else {
+                    alert('Deletion cancelled.'); // User cancelled on second prompt
+                }
+            } else {
+                alert('Deletion cancelled.'); // User cancelled on first prompt
+            }
+        }
+
+        /**
+         * Renders (or re-renders) the tasks for a given section.
+         * Clears the existing list and appends new list items based on current data.
+         * @param {string} sectionType - The type of section ('study', 'skill', 'necessary').
+         */
+        function renderTasks(sectionType) {
+            const listElement = taskLists[sectionType];
+            listElement.innerHTML = ''; // Clear current list
+
+            const tasks = tasksData[currentDate] ? tasksData[currentDate][sectionType] || [] : [];
+
+            tasks.forEach((task, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = `task-item ${task.done ? 'done' : ''}`;
+
+                listItem.innerHTML = `
+                    <span class="flex-grow text-gray-800">${task.text}</span>
+                    <div class="flex items-center gap-2">
+                        <button class="icon-button toggle-button" onclick="toggleTaskDone('${sectionType}', ${index})">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                        </button>
+                        <button class="icon-button delete-button" onclick="deleteTask('${sectionType}', ${index})">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </div>
+                `;
+                listElement.appendChild(listItem);
+            });
+        }
+
+        /**
+         * Renders buttons for all dates that have saved tasks.
+         * Allows quick switching between different dates.
+         */
+        function renderSavedDates() {
+            const dbRef = ref(db, 'tasks');
+            get(dbRef).then((snapshot) => {
+                savedDatesContainer.innerHTML = '';
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const savedDates = Object.keys(data);
+                    savedDates.forEach(date => {
+                        const dateItem = document.createElement('div');
+                        dateItem.className = 'saved-date-item';
+
+                        const dateButton = document.createElement('button');
+                        dateButton.className = `date-button ${date === currentDate ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`;
+                        dateButton.textContent = formatDateForDisplay(date);
+                        dateButton.onclick = () => loadTasksForDate(date);
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'icon-button delete-button';
+                        deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>`;
+                        deleteButton.title = `Delete all tasks for ${date}`;
+                        deleteButton.onclick = (event) => {
+                            event.stopPropagation();
+                            deleteDateEntry(date);
+                        };
+
+                        dateItem.appendChild(dateButton);
+                        dateItem.appendChild(deleteButton);
+                        savedDatesContainer.appendChild(dateItem);
+                    });
+                }
+            });
+        }
+
+
+        /**
+         * Deletes all tasks for a specific date entry with triple confirmation.
+         * @param {string} dateToDelete - The date string (YYYY-MM-DD) whose entry needs to be deleted.
+         */
+        function deleteDateEntry(dateToDelete) {
+            if (confirm(`Are you absolutely sure you want to delete ALL tasks for ${formatDateForDisplay(dateToDelete)}?`)) {
+                const dbRef = ref(db, `tasks/${dateToDelete}`);
+                remove(dbRef)
+                    .then(() => {
+                        console.log(`All tasks for ${dateToDelete} deleted from Firebase.`);
+                        if (dateToDelete === currentDate) {
+                            currentDate = formatDate(new Date());
+                            datePicker.value = currentDate;
+                            loadTasksForDate(currentDate);
+                        } else {
+                            renderSavedDates();
+                        }
+                        updateProgressBar('study');
+                        updateProgressBar('skill');
+                        updateProgressBar('necessary');
+                        alert(`All tasks for ${formatDateForDisplay(dateToDelete)} deleted successfully.`);
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting date entry:", error);
+                    });
+            }
+        }
+
+
+        /**
+         * Updates the progress bar for a given section.
+         * @param {string} sectionType - The type of section ('study', 'skill', 'necessary').
+         */
+        function updateProgressBar(sectionType) {
+            const tasks = tasksData[currentDate] ? tasksData[currentDate][sectionType] || [] : [];
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.done).length;
+
+            const progressBarFill = progressBars[sectionType].fill;
+            const progressBarText = progressBars[sectionType].text;
+
+            let percentage = 0;
+            if (totalTasks > 0) {
+                percentage = Math.round((completedTasks / totalTasks) * 100);
+            }
+
+            progressBarFill.style.width = `${percentage}%`;
+            progressBarText.textContent = `${percentage}%`;
+
+            // Adjust text color based on progress for visibility
+            // If the fill is more than 50% (roughly half), the text will be white for better contrast.
+            // Otherwise, it will be the default dark gray.
+            if (percentage > 50) {
+                progressBarText.style.color = 'white';
+            } else {
+                progressBarText.style.color = '#4a5568';
+            }
+        }
+
+
+        // --- Modal Functions ---
+        /**
+         * Opens the Reading Funnel modal.
+         */
+        function openModal() {
+            readingFunnelModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling of the background body
+        }
+
+        /**
+         * Closes the Reading Funnel modal.
+         */
+        function closeModal() {
+            readingFunnelModal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scrolling of the background body
+        }
+    </script>
+</body>
+
+</html>
