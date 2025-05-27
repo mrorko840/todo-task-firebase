@@ -53,7 +53,10 @@ cd todo-task-firebase
 ## 🔥 Firebase Setup
 To connect your own Firebase project:
 
-1️⃣ Go to Firebase Console.
-2️⃣ Create a new project and enable Realtime Database.
-3️⃣ Replace the existing firebaseConfig in the HTML file with your own.
-4️⃣ Make sure database rules are set for proper read/write access.
+- 1️⃣ Go to Firebase Console.
+- 2️⃣ Create a new project and enable Realtime Database.
+- 3️⃣ Replace the existing firebaseConfig in the HTML file with your own.
+- 4️⃣ Make sure database rules are set for proper read/write access.
+
+## 📜 License
+This project is open-sourced under the MIT License.
