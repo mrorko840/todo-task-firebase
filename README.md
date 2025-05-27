@@ -29,6 +29,9 @@ A beautifully crafted **Daily Task Tracker** web application that helps you orga
 ✅ **Interactive Reading Funnel Modal**:  
 - Stay on track with pre-set study guidelines.
 
+🎨 Screenshots
+<p align="center"> <img src="https://i.imgur.com/Mkbd2C7.png" alt="Task Tracker Screenshot" width="100%" /> </p>
+
 ---
 
 ## 🔧 Tech Stack
@@ -45,3 +48,12 @@ A beautifully crafted **Daily Task Tracker** web application that helps you orga
 ```bash
 git clone https://github.com/mrorko840/todo-task-firebase.git
 cd todo-task-firebase
+```
+
+## 🔥 Firebase Setup
+To connect your own Firebase project:
+
+1️⃣ Go to Firebase Console.
+2️⃣ Create a new project and enable Realtime Database.
+3️⃣ Replace the existing firebaseConfig in the HTML file with your own.
+4️⃣ Make sure database rules are set for proper read/write access.
